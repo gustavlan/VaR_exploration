@@ -4,6 +4,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 import os
+from src.config import TICKERS, START_DATE, END_DATE, PROCESSED_DATA_DIR
 
 def fetch_and_save_data(tickers, start_date, end_date, output_dir):
     """
@@ -51,13 +52,4 @@ def fetch_and_save_data(tickers, start_date, end_date, output_dir):
             print(f"Error fetching or saving data for {ticker}: {e}\n")
 
 if __name__ == "__main__":
-    # Define parameters clearly here
-    TICKERS = {
-        '^GSPC': 'sp500',
-        '^IXIC': 'nasdaq'
-    }
-    START_DATE = '2017-01-01'
-    END_DATE = datetime.today().strftime('%Y-%m-%d')
-    OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'processed')
-
-    fetch_and_save_data(TICKERS, START_DATE, END_DATE, OUTPUT_DIR)
+    fetch_and_save_data(TICKERS, START_DATE, END_DATE, PROCESSED_DATA_DIR)

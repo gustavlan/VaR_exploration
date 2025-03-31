@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+import os
+from src.config import PROCESSED_DATA_DIR, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS
+from src.risk.utils import calculate_daily_returns
 
 def historical_var(returns, confidence_level=0.95):
     """
@@ -83,13 +86,13 @@ def calculate_daily_returns(price_series):
 
 
 if __name__ == "__main__":
-    example_data_path = '../../data/processed/2025-03-30_sp500.csv'
+    example_data_path = os.path.join(PROCESSED_DATA_DIR, '2025-03-30_sp500.csv')  # adjust date accordingly
 
     df = pd.read_csv(example_data_path, index_col=0)
     price_series = df.iloc[:, 0]
 
     returns = calculate_daily_returns(price_series)
 
-    print("Historical VaR (95%):", historical_var(returns))
-    print("Parametric VaR (95%):", parametric_var(returns))
-    print("Monte Carlo VaR (95%):", monte_carlo_var(returns))
+    print("Historical VaR:", historical_var(returns, CONFIDENCE_LEVEL))
+    print("Parametric VaR:", parametric_var(returns, CONFIDENCE_LEVEL))
+    print("Monte Carlo VaR:", monte_carlo_var(returns, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS))
