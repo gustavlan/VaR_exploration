@@ -1,10 +1,8 @@
-# fetch_data.py
-
 import yfinance as yf
 import pandas as pd
 from datetime import datetime
 import os
-from src.config import TICKERS, START_DATE, END_DATE, PROCESSED_DATA_DIR
+from config import TICKERS, START_DATE, END_DATE, PROCESSED_DATA_DIR
 
 def fetch_and_save_data(tickers, start_date, end_date, output_dir):
     """

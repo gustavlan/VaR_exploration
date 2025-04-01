@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 import os
-from src.config import PROCESSED_DATA_DIR, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS
-from src.risk.utils import calculate_daily_returns
+from config import PROCESSED_DATA_DIR, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS
+from risk.utils import calculate_daily_returns
 
 def historical_var(returns, confidence_level=0.95):
     """
