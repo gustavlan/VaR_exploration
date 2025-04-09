@@ -17,3 +17,19 @@ def sharpe_ratio(returns, risk_free_rate=RISK_FREE_RATE, trading_days=TRADING_DA
         raise ValueError("Volatility is zero, Sharpe ratio undefined.")
     
     return annualized_excess_return / annualized_vol
+
+def calculate_daily_returns(price_series):
+    """
+    Converts a series of asset prices into daily returns.
+
+    Args:
+        price_series (pd.Series): Asset prices.
+
+    Returns:
+        pd.Series: Daily returns.
+    """
+    if price_series.empty:
+        raise ValueError("Price series is empty.")
+
+    returns = price_series.pct_change().dropna()
+    return returns

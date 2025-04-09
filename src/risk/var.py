@@ -67,24 +67,6 @@ def monte_carlo_var(returns, confidence_level=0.95, simulations=10000):
 
     return abs(var)
 
-
-def calculate_daily_returns(price_series):
-    """
-    Converts a series of asset prices into daily returns.
-
-    Args:
-        price_series (pd.Series): Asset prices.
-
-    Returns:
-        pd.Series: Daily returns.
-    """
-    if price_series.empty:
-        raise ValueError("Price series is empty.")
-
-    returns = price_series.pct_change().dropna()
-    return returns
-
-
 if __name__ == "__main__":
     example_data_path = os.path.join(PROCESSED_DATA_DIR, '2025-03-30_sp500.csv')  # adjust date accordingly
 
