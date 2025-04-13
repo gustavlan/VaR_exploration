@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from config import TRADING_DAYS_PER_YEAR, RISK_FREE_RATE
 
 def annualize_volatility(daily_volatility, trading_days=TRADING_DAYS_PER_YEAR):
@@ -55,3 +57,49 @@ def calculate_parametric_var(volatility: pd.Series, confidence_z: float = -2.33,
     and time horizon (days).
     """
     return confidence_z * np.sqrt(horizon_days) * volatility
+
+def load_latest_price_data(directory: str, keyword: str) -> pd.DataFrame:
+    """
+    Loads the latest CSV file for a given keyword, ensuring numeric data types and clean index.
+
+    Args:
+        directory (str): Directory path with CSV files.
+        keyword (str): Keyword identifying the CSV files.
+
+    Returns:
+        pd.DataFrame: Clean, numeric DataFrame with date index.
+    """
+    files = [
+        f for f in os.listdir(directory)
+        if keyword in f and f.endswith('.csv')
+    ]
+
+    if not files:
+        raise FileNotFoundError(f"No files found for keyword '{keyword}' in {directory}")
+
+    # Extract dates and find latest file
+    files_dates = [
+        (f, datetime.strptime(f.split('_')[0], '%Y-%m-%d'))
+        for f in files
+    ]
+    latest_file = max(files_dates, key=lambda x: x[1])[0]
+    latest_filepath = os.path.join(directory, latest_file)
+
+    # Explicitly load CSV, ensuring numeric conversion and clean index
+    df = pd.read_csv(latest_filepath, index_col=0, parse_dates=True)
+
+    # Rename index clearly
+    df.index.name = 'Date'
+
+    # Explicit numeric conversion for all columns robustly
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # Explicitly remove rows with any NaN values
+    df.dropna(inplace=True)
+
+    # Explicitly convert columns to numeric type (float64)
+    df = df.astype('float64')
+
+    print(f"Loaded data from: {latest_filepath}")
+    return df
