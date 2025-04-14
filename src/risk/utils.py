@@ -103,3 +103,35 @@ def load_latest_price_data(directory: str, keyword: str) -> pd.DataFrame:
 
     print(f"Loaded data from: {latest_filepath}")
     return df
+
+def detect_var_breaches(df: pd.DataFrame, return_col: str, var_col: str, breach_col: str = 'breach') -> pd.DataFrame:
+    """
+    Adds a column indicating where a VaR breach occurred.
+
+    Args:
+        df (pd.DataFrame): DataFrame with return and VaR columns.
+        return_col (str): Name of the column with returns.
+        var_col (str): Name of the column with the calculated VaR.
+        breach_col (str): Name of the output column to flag breaches (default 'breach').
+
+    Returns:
+        pd.DataFrame: Same DataFrame with a new boolean column indicating breaches.
+    """
+    df[breach_col] = (df[return_col] < df[var_col]) & (df[return_col] < 0)
+    return df
+
+
+def summarize_var_breaches(df: pd.DataFrame, breach_col: str = 'breach') -> dict:
+    """
+    Summarizes the number and percentage of VaR breaches.
+
+    Args:
+        df (pd.DataFrame): DataFrame with a boolean breach column.
+        breach_col (str): Name of the breach column.
+
+    Returns:
+        dict: Dictionary with breach count and percentage.
+    """
+    count = df[breach_col].sum()
+    pct = round(df[breach_col].mean(), 3)
+    return {'count': count, 'percentage': pct}
