@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Union, Dict
+from typing import Union, Dict, List, Optional
 import logging
 
 import numpy as np
