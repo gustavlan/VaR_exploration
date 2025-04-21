@@ -1,80 +1,110 @@
+import os
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-import os
+
 from config import PROCESSED_DATA_DIR, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS
 from risk.utils import calculate_daily_returns
 
-def historical_var(returns, confidence_level=0.95):
+
+def historical_var(
+    returns: pd.Series,
+    confidence_level: float = CONFIDENCE_LEVEL
+) -> float:
     """
-    Calculates historical VaR given returns.
+    Compute historical VaR at a specified confidence level.
 
-    Args:
-        returns (pd.Series): Daily returns of the asset.
-        confidence_level (float): Confidence level for VaR calculation (default 0.95).
+    Parameters
+    ----------
+    returns
+        Series of daily returns.
+    confidence_level
+        VaR confidence level (e.g. 0.95 for 95%).
 
-    Returns:
-        float: Historical VaR.
-    """
-    if returns.empty:
-        raise ValueError("Returns series is empty.")
+    Returns
+    -------
+    float
+        Absolute historical VaR (positive number).
 
-    var = np.percentile(returns.dropna(), (1 - confidence_level) * 100)
-    return abs(var)
-
-
-def parametric_var(returns, confidence_level=0.95):
-    """
-    Calculates parametric VaR assuming returns are normally distributed.
-
-    Args:
-        returns (pd.Series): Daily returns of the asset.
-        confidence_level (float): Confidence level for VaR calculation (default 0.95).
-
-    Returns:
-        float: Parametric VaR.
+    Raises
+    ------
+    ValueError
+        If the returns series is empty.
     """
     if returns.empty:
         raise ValueError("Returns series is empty.")
+    var_pct = (1 - confidence_level) * 100
+    var_value = np.percentile(returns.dropna(), var_pct)
+    return abs(var_value)
 
+
+def parametric_var(
+    returns: pd.Series,
+    confidence_level: float = CONFIDENCE_LEVEL
+) -> float:
+    """
+    Compute parametric (Gaussian) VaR assuming normal returns.
+
+    Parameters
+    ----------
+    returns
+        Series of daily returns.
+    confidence_level
+        VaR confidence level.
+
+    Returns
+    -------
+    float
+        Absolute parametric VaR.
+    """
+    if returns.empty:
+        raise ValueError("Returns series is empty.")
     mean = returns.mean()
-    std_dev = returns.std()
-    z_score = np.abs(np.percentile(np.random.normal(0, 1, 100000), (1 - confidence_level) * 100))
-    var = mean - z_score * std_dev
-
+    std = returns.std()
+    # get z-score from the normal distribution
+    z = abs(np.percentile(np.random.normal(0, 1, 100000), (1 - confidence_level) * 100))
+    var = mean - z * std
     return abs(var)
 
 
-def monte_carlo_var(returns, confidence_level=0.95, simulations=10000):
+def monte_carlo_var(
+    returns: pd.Series,
+    confidence_level: float = CONFIDENCE_LEVEL,
+    simulations: int = MONTE_CARLO_SIMULATIONS
+) -> float:
     """
-    Calculates VaR using Monte Carlo simulations assuming normality of returns.
+    Compute VaR via Monte Carlo simulation under normality assumption.
 
-    Args:
-        returns (pd.Series): Daily returns of the asset.
-        confidence_level (float): Confidence level for VaR calculation (default 0.95).
-        simulations (int): Number of Monte Carlo simulations (default 10,000).
+    Parameters
+    ----------
+    returns
+        Series of daily returns.
+    confidence_level
+        VaR confidence level.
+    simulations
+        Number of simulated return paths.
 
-    Returns:
-        float: Monte Carlo VaR.
+    Returns
+    -------
+    float
+        Absolute Monte Carlo VaR.
     """
     if returns.empty:
         raise ValueError("Returns series is empty.")
-
     mean = returns.mean()
-    std_dev = returns.std()
-
-    simulated_returns = np.random.normal(mean, std_dev, simulations)
-    var = np.percentile(simulated_returns, (1 - confidence_level) * 100)
-
+    std = returns.std()
+    sims = np.random.normal(mean, std, simulations)
+    var = np.percentile(sims, (1 - confidence_level) * 100)
     return abs(var)
+
 
 if __name__ == "__main__":
-    example_data_path = os.path.join(PROCESSED_DATA_DIR, '2025-03-30_sp500.csv')  # adjust date accordingly
-
-    df = pd.read_csv(example_data_path, index_col=0)
-    price_series = df.iloc[:, 0]
-
-    returns = calculate_daily_returns(price_series)
-
-    print("Historical VaR:", historical_var(returns, CONFIDENCE_LEVEL))
-    print("Parametric VaR:", parametric_var(returns, CONFIDENCE_LEVEL))
-    print("Monte Carlo VaR:", monte_carlo_var(returns, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS))
+    # Simple example usage
+    example = os.path.join(PROCESSED_DATA_DIR, '2025-03-30_sp500.csv')
+    df = pd.read_csv(example, index_col=0)
+    prices = df.iloc[:, 0]
+    rets = calculate_daily_returns(prices)
+    print("Historical VaR:", historical_var(rets))
+    print("Parametric VaR:", parametric_var(rets))
+    print("Monte Carlo VaR:", monte_carlo_var(rets))
