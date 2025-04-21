@@ -1,11 +1,14 @@
 import os
 from datetime import datetime
 from typing import Union, Dict
+import logging
 
 import numpy as np
 import pandas as pd
 
 from config import TRADING_DAYS_PER_YEAR, RISK_FREE_RATE
+
+logger = logging.getLogger(__name__)
 
 
 def annualize_volatility(
@@ -134,21 +137,17 @@ def calculate_forward_log_returns(
     days_forward: int = 10
 ) -> pd.Series:
     """
-    Calculate forward-looking log returns over a given horizon.
-
-    Parameters
-    ----------
-    prices
-        Time-indexed price series.
-    days_forward
-        Number of days ahead to compute log return.
+    Calculates forward‑looking log returns over a specified number of days.
+    Drops the trailing NaNs created by the shift.
 
     Returns
     -------
     pd.Series
-        Forward log returns: log(p_{t+days_forward} / p_t).
+        Forward log returns: log(p_{t+days_forward} / p_t), with last
+        `days_forward` rows removed.
     """
-    return np.log(prices.shift(-days_forward) / prices)
+    fwd = np.log(prices.shift(-days_forward) / prices)
+    return fwd.dropna()
 
 
 def calculate_rolling_volatility(
@@ -204,28 +203,12 @@ def load_latest_price_data(
     keyword: str
 ) -> pd.DataFrame:
     """
-    Load the most recent CSV containing a given keyword from a directory.
-
-    Parameters
-    ----------
-    directory
-        Path to the folder containing processed CSV files.
-    keyword
-        Substring to match in filenames (e.g. 'sp500' or 'nasdaq').
-
-    Returns
-    -------
-    pd.DataFrame
-        Cleaned DataFrame with a Date index and float64 columns.
-
-    Raises
-    ------
-    FileNotFoundError
-        If no matching files are found.
+    Load the most recent CSV containing `keyword` from `directory`.
+    Raises FileNotFoundError if no match.
     """
     files = [f for f in os.listdir(directory) if keyword in f and f.endswith('.csv')]
     if not files:
-        raise FileNotFoundError(f"No files found for keyword '{keyword}' in {directory}")
+        raise FileNotFoundError(f"No files found for keyword '{keyword}' in {directory!r}")
 
     dated = [(f, datetime.strptime(f.split('_')[0], '%Y-%m-%d')) for f in files]
     latest = max(dated, key=lambda x: x[1])[0]
@@ -237,7 +220,8 @@ def load_latest_price_data(
         df[col] = pd.to_numeric(df[col], errors='coerce')
     df.dropna(inplace=True)
     df = df.astype('float64')
-    print(f"Loaded data from: {path}")
+
+    logger.info(f"Loaded price data from {path!r}")
     return df
 
 
