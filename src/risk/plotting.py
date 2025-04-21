@@ -1,7 +1,11 @@
-from typing import List
+import logging
+
+# Silence that categorical‐units INFO
+logging.getLogger('matplotlib.category').setLevel(logging.WARNING)
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from typing import List
 
 
 def plot_var_breaches(
@@ -14,30 +18,21 @@ def plot_var_breaches(
 ) -> None:
     """
     Plot returns, VaR threshold, and breach points on a single axes.
-
-    Parameters
-    ----------
-    data
-        DataFrame containing return_col, var_col, and breach_col.
-    ax
-        Matplotlib Axes to draw on.
-    title
-        Title of the subplot.
-    breach_col
-        Column name for breach flags.
-    return_col
-        Column name for returns.
-    var_col
-        Column name for VaR values.
-
-    Returns
-    -------
-    None
     """
-    ax.plot(data.index, data[return_col], label='10-day returns')
+    # Force index into real Python datetimes
+    x = pd.to_datetime(data.index)
+
+    # Plot the 10-day returns
+    ax.plot(x, data[return_col], label='10-day returns')
+
+    # Mark breaches
     breaches = data[data[breach_col]]
-    ax.scatter(breaches.index, breaches[return_col], color='red', marker='x', label='VaR Breaches')
-    ax.plot(data.index, data[var_col], label='10-day VaR')
+    bx = pd.to_datetime(breaches.index)
+    ax.scatter(bx, breaches[return_col], marker='x', label='VaR Breaches')
+
+    # Plot the 10-day VaR
+    ax.plot(x, data[var_col], label='10-day VaR')
+
     ax.set_title(title)
     ax.set_xlabel('Date')
     ax.set_ylabel('Returns')
@@ -54,30 +49,10 @@ def plot_multiple_var_breaches(
 ) -> None:
     """
     Stack multiple VaR breach plots vertically for comparison.
-
-    Parameters
-    ----------
-    data_list
-        List of DataFrames to plot.
-    titles
-        Corresponding list of subplot titles.
-    breach_col
-        Column name for breach flags.
-    return_col
-        Column name for returns.
-    var_col
-        Column name for VaR values.
-    figsize
-        Figure size (width, height).
-
-    Returns
-    -------
-    None
     """
     n = len(data_list)
     fig, axes = plt.subplots(nrows=n, ncols=1, figsize=figsize)
 
-    # If only one DataFrame, axes is not iterable
     if n == 1:
         plot_var_breaches(data_list[0], axes, titles[0], breach_col, return_col, var_col)
     else:

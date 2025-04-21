@@ -200,28 +200,85 @@ def calculate_parametric_var(
 
 def load_latest_price_data(
     directory: str,
-    keyword: str
+    keyword: str,
+    date_threshold: float = 0.9
 ) -> pd.DataFrame:
     """
-    Load the most recent CSV containing `keyword` from `directory`.
-    Raises FileNotFoundError if no match.
+    Load the most recent CSV in `directory` whose filename contains `keyword`,
+    auto-detect its date column, and return a clean time-indexed DataFrame.
+
+    Parameters
+    ----------
+    directory : str
+        Directory containing CSVs named like 'YYYY-MM-DD_<keyword>.csv'.
+    keyword : str
+        Substring to match in filenames (e.g. 'nasdaq').
+    date_threshold : float
+        Minimum fraction of parseable datetimes in a column to pick it
+        as the date column (default 0.9).
+
+    Returns
+    -------
+    pd.DataFrame
+        Time-indexed DataFrame of float64 values with no NaNs.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no file matching `keyword` is found.
+    ValueError
+        If no column can be confidently parsed as dates.
     """
-    files = [f for f in os.listdir(directory) if keyword in f and f.endswith('.csv')]
+    # 1) find the latest file
+    files: List[str] = [
+        f for f in os.listdir(directory)
+        if keyword in f and f.endswith('.csv')
+    ]
     if not files:
-        raise FileNotFoundError(f"No files found for keyword '{keyword}' in {directory!r}")
+        raise FileNotFoundError(f"No CSVs for '{keyword}' in {directory!r}")
 
-    dated = [(f, datetime.strptime(f.split('_')[0], '%Y-%m-%d')) for f in files]
-    latest = max(dated, key=lambda x: x[1])[0]
-    path = os.path.join(directory, latest)
+    dated = []
+    for fname in files:
+        try:
+            dt = datetime.strptime(fname.split('_')[0], '%Y-%m-%d')
+            dated.append((fname, dt))
+        except ValueError:
+            continue
+    if not dated:
+        raise FileNotFoundError(f"No properly dated files for '{keyword}' in {directory!r}")
 
-    df = pd.read_csv(path, index_col=0, parse_dates=True)
-    df.index.name = 'Date'
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
-    df.dropna(inplace=True)
-    df = df.astype('float64')
+    latest_file = max(dated, key=lambda x: x[1])[0]
+    path = os.path.join(directory, latest_file)
+    logger.info(f"Loading data from {path!r}")
 
-    logger.info(f"Loaded price data from {path!r}")
+    # 2) read the CSV raw
+    df_raw = pd.read_csv(path)
+    if df_raw.shape[1] < 2:
+        raise ValueError(f"Expected ≥2 columns in {path!r}, got {df_raw.shape[1]}")
+
+    # 3) auto-detect date column
+    date_col: Optional[str] = None
+    for col in df_raw.columns:
+        parsed = pd.to_datetime(df_raw[col], errors='coerce', infer_datetime_format=True)
+        frac = parsed.notna().mean()
+        if frac >= date_threshold:
+            date_col = col
+            df_raw[col] = parsed
+            logger.info(f"Detected date column '{col}' ({frac:.0%} parseable)")
+            break
+
+    if date_col is None:
+        raise ValueError(f"No column in {path!r} had ≥{date_threshold:.0%} parseable dates")
+
+    # 4) set index (drop the date column automatically)
+    df = df_raw.set_index(date_col, drop=True)
+
+    # 5) convert all remaining columns to float, drop NaNs
+    df = df.apply(pd.to_numeric, errors='coerce') \
+           .dropna(how='any') \
+           .astype('float64', copy=False)
+
+    logger.info(f"Loaded {len(df)} rows with columns {list(df.columns)}")
     return df
 
 

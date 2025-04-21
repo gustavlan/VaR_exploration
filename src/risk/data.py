@@ -23,5 +23,5 @@ def fetch_and_save_data(
         closing = data[["Close"]].rename(columns={"Close": f"{filename_prefix}_close"})
         today = datetime.today().strftime("%Y-%m-%d")
         path = os.path.join(output_dir, f"{today}_{filename_prefix}.csv")
-        closing.to_csv(path)
+        closing.to_csv(path, index_label="Date")
         print(f"[risk.data] saved {ticker} → {path}")
