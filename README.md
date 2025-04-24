@@ -111,17 +111,8 @@ Rather than fitting VaR once on the full sample, we:
     └── workflows/ci.yml
 ```
 
----
 
-## 5. Testing & Continuous Integration
-
-- **Unit tests**: `pytest tests/`  
-- **Style checks**: `black --check .`, `flake8 .`  
-- **CI**: GitHub Actions (`.github/workflows/ci.yml`) runs lint + pytest on every PR to `main`.
-
----
-
-## 6. References
+## 5. References
 
 1. Kupiec, P. (1995). *Techniques for Verifying the Accuracy of Risk Measurement Models*.  
 2. Christoffersen, P. F. (1998). *Evaluating Interval Forecasts*.  
