@@ -107,8 +107,6 @@ Rather than fitting VaR once on the full sample, we:
 │   └── test_var.py
 ├── requirements.txt
 ├── pytest.ini
-└── .github/
-    └── workflows/ci.yml
 ```
 
 
