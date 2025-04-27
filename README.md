@@ -105,8 +105,12 @@ Rather than fitting VaR once on the full sample, we:
 ├── tests/
 │   ├── test_utils.py
 │   └── test_var.py
+├── data/
+│   ├── processed
+│   └── raw
 ├── requirements.txt
-├── pytest.ini
+├── setup.py
+└── pytest.ini
 ```
 
 
