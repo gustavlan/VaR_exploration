@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def annualize_volatility(
-    daily_volatility: Union[pd.Series, float],
-    trading_days: int = TRADING_DAYS_PER_YEAR
+    daily_volatility: Union[pd.Series, float], trading_days: int = TRADING_DAYS_PER_YEAR
 ) -> Union[pd.Series, float]:
     """
     Annualize a daily volatility series or scalar.
@@ -34,8 +33,7 @@ def annualize_volatility(
 
 
 def annualize_return(
-    daily_return: Union[pd.Series, float],
-    trading_days: int = TRADING_DAYS_PER_YEAR
+    daily_return: Union[pd.Series, float], trading_days: int = TRADING_DAYS_PER_YEAR
 ) -> Union[pd.Series, float]:
     """
     Annualize a daily return series or scalar.
@@ -58,7 +56,7 @@ def annualize_return(
 def sharpe_ratio(
     returns: pd.Series,
     risk_free_rate: float = RISK_FREE_RATE,
-    trading_days: int = TRADING_DAYS_PER_YEAR
+    trading_days: int = TRADING_DAYS_PER_YEAR,
 ) -> float:
     """
     Compute the annualized Sharpe ratio of a return series.
@@ -133,8 +131,7 @@ def calculate_log_returns(prices: pd.Series) -> pd.Series:
 
 
 def calculate_forward_log_returns(
-    prices: pd.Series,
-    days_forward: int = 10
+    prices: pd.Series, days_forward: int = 10
 ) -> pd.Series:
     """
     Calculates forward‑looking log returns over a specified number of days.
@@ -150,10 +147,7 @@ def calculate_forward_log_returns(
     return fwd.dropna()
 
 
-def calculate_rolling_volatility(
-    returns: pd.Series,
-    window: int = 21
-) -> pd.Series:
+def calculate_rolling_volatility(returns: pd.Series, window: int = 21) -> pd.Series:
     """
     Calculate rolling volatility (standard deviation) of returns.
 
@@ -173,9 +167,7 @@ def calculate_rolling_volatility(
 
 
 def calculate_parametric_var(
-    volatility: pd.Series,
-    confidence_z: float = -2.33,
-    horizon_days: int = 10
+    volatility: pd.Series, confidence_z: float = -2.33, horizon_days: int = 10
 ) -> pd.Series:
     """
     Calculate parametric VaR from a volatility series.
@@ -199,9 +191,7 @@ def calculate_parametric_var(
 
 
 def load_latest_price_data(
-    directory: str,
-    keyword: str,
-    date_threshold: float = 0.9
+    directory: str, keyword: str, date_threshold: float = 0.9
 ) -> pd.DataFrame:
     """
     Load the most recent CSV in `directory` whose filename contains `keyword`,
@@ -231,8 +221,7 @@ def load_latest_price_data(
     """
     # 1) find the latest file
     files: List[str] = [
-        f for f in os.listdir(directory)
-        if keyword in f and f.endswith('.csv')
+        f for f in os.listdir(directory) if keyword in f and f.endswith(".csv")
     ]
     if not files:
         raise FileNotFoundError(f"No CSVs for '{keyword}' in {directory!r}")
@@ -240,12 +229,14 @@ def load_latest_price_data(
     dated = []
     for fname in files:
         try:
-            dt = datetime.strptime(fname.split('_')[0], '%Y-%m-%d')
+            dt = datetime.strptime(fname.split("_")[0], "%Y-%m-%d")
             dated.append((fname, dt))
         except ValueError:
             continue
     if not dated:
-        raise FileNotFoundError(f"No properly dated files for '{keyword}' in {directory!r}")
+        raise FileNotFoundError(
+            f"No properly dated files for '{keyword}' in {directory!r}"
+        )
 
     latest_file = max(dated, key=lambda x: x[1])[0]
     path = os.path.join(directory, latest_file)
@@ -259,7 +250,9 @@ def load_latest_price_data(
     # 3) auto-detect date column
     date_col: Optional[str] = None
     for col in df_raw.columns:
-        parsed = pd.to_datetime(df_raw[col], errors='coerce', infer_datetime_format=True)
+        parsed = pd.to_datetime(
+            df_raw[col], errors="coerce", infer_datetime_format=True
+        )
         frac = parsed.notna().mean()
         if frac >= date_threshold:
             date_col = col
@@ -268,25 +261,26 @@ def load_latest_price_data(
             break
 
     if date_col is None:
-        raise ValueError(f"No column in {path!r} had ≥{date_threshold:.0%} parseable dates")
+        raise ValueError(
+            f"No column in {path!r} had ≥{date_threshold:.0%} parseable dates"
+        )
 
     # 4) set index (drop the date column automatically)
     df = df_raw.set_index(date_col, drop=True)
 
     # 5) convert all remaining columns to float, drop NaNs
-    df = df.apply(pd.to_numeric, errors='coerce') \
-           .dropna(how='any') \
-           .astype('float64', copy=False)
+    df = (
+        df.apply(pd.to_numeric, errors="coerce")
+        .dropna(how="any")
+        .astype("float64", copy=False)
+    )
 
     logger.info(f"Loaded {len(df)} rows with columns {list(df.columns)}")
     return df
 
 
 def detect_var_breaches(
-    df: pd.DataFrame,
-    return_col: str,
-    var_col: str,
-    breach_col: str = 'breach'
+    df: pd.DataFrame, return_col: str, var_col: str, breach_col: str = "breach"
 ) -> pd.DataFrame:
     """
     Flag rows where returns breach the VaR threshold.
@@ -312,8 +306,7 @@ def detect_var_breaches(
 
 
 def summarize_var_breaches(
-    df: pd.DataFrame,
-    breach_col: str = 'breach'
+    df: pd.DataFrame, breach_col: str = "breach"
 ) -> Dict[str, Union[int, float]]:
     """
     Summarize the count and percentage of VaR breaches.
@@ -332,4 +325,4 @@ def summarize_var_breaches(
     """
     count = int(df[breach_col].sum())
     pct = float(round(df[breach_col].mean(), 3))
-    return {'count': count, 'percentage': pct}
+    return {"count": count, "percentage": pct}

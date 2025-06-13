@@ -34,12 +34,12 @@ def kupiec_pof_test(breaches: pd.Series, alpha: float) -> dict:
         p_value = np.nan
     else:
         # Log‐likelihood ratio
-        num = (1 - p)**(n - x) * p**x
-        den = (1 - p_hat)**(n - x) * p_hat**x
+        num = (1 - p) ** (n - x) * p**x
+        den = (1 - p_hat) ** (n - x) * p_hat**x
         LR = -2 * np.log(num / den)
         p_value = 1 - chi2.cdf(LR, df=1)
 
-    return {'n': n, 'x': x, 'p_hat': p_hat, 'LR': LR, 'p_value': p_value}
+    return {"n": n, "x": x, "p_hat": p_hat, "LR": LR, "p_value": p_value}
 
 
 def christoffersen_independence_test(breaches: pd.Series) -> dict:
@@ -69,25 +69,29 @@ def christoffersen_independence_test(breaches: pd.Series) -> dict:
     N11 = np.sum((b[:-1] == 1) & (b[1:] == 1))
 
     # probs
-    pi0 = N01 / (N00 + N01) if (N00 + N01)>0 else 0
-    pi1 = N11 / (N10 + N11) if (N10 + N11)>0 else 0
+    pi0 = N01 / (N00 + N01) if (N00 + N01) > 0 else 0
+    pi1 = N11 / (N10 + N11) if (N10 + N11) > 0 else 0
     pi = (N01 + N11) / (N00 + N01 + N10 + N11)
 
     # log‐likelihoods
-    def ll(n0, n1, p): return n0 * np.log(1 - p) + n1 * np.log(p)
+    def ll(n0, n1, p):
+        return n0 * np.log(1 - p) + n1 * np.log(p)
 
     ll_ind = ll(N00 + N10, N01 + N11, pi)
-    ll_markov = (
-        ll(N00, N01, pi0) +
-        ll(N10, N11, pi1)
-    )
+    ll_markov = ll(N00, N01, pi0) + ll(N10, N11, pi1)
     LR = -2 * (ll_ind - ll_markov)
     p_value = 1 - chi2.cdf(LR, df=1)
 
     return {
-        'N00': N00, 'N01': N01, 'N10': N10, 'N11': N11,
-        'pi0': pi0, 'pi1': pi1, 'pi': pi,
-        'LR': LR, 'p_value': p_value
+        "N00": N00,
+        "N01": N01,
+        "N10": N10,
+        "N11": N11,
+        "pi0": pi0,
+        "pi1": pi1,
+        "pi": pi,
+        "LR": LR,
+        "p_value": p_value,
     }
 
 

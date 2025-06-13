@@ -38,12 +38,12 @@ def test_calculate_daily_returns():
 def test_calculate_log_and_forward_returns():
     prices = pd.Series([100, 110, 121], index=pd.date_range("2020-01-01", periods=3))
     log_ret = calculate_log_returns(prices)
-    assert np.allclose(log_ret.values, np.log([110/100, 121/110]))
+    assert np.allclose(log_ret.values, np.log([110 / 100, 121 / 110]))
 
     fwd = calculate_forward_log_returns(prices, days_forward=2)
     # only one value: ln( price[t+2]/price[t] ) = ln(121/100)
     assert len(fwd) == 1
-    assert fwd.iloc[0] == pytest.approx(np.log(121/100))
+    assert fwd.iloc[0] == pytest.approx(np.log(121 / 100))
 
 
 def test_rolling_vol_and_parametric_var():
@@ -77,14 +77,18 @@ def test_sharpe_ratio_and_edge():
 
 def test_detect_and_summarize_breaches():
     # make a tiny DataFrame
-    df = pd.DataFrame({
-        'ret':    [0.05, -0.10, -0.02],
-        'var':    [-0.01, -0.05, -0.05],
-    })
-    df2 = detect_var_breaches(df.copy(), return_col='ret', var_col='var', breach_col='breach')
+    df = pd.DataFrame(
+        {
+            "ret": [0.05, -0.10, -0.02],
+            "var": [-0.01, -0.05, -0.05],
+        }
+    )
+    df2 = detect_var_breaches(
+        df.copy(), return_col="ret", var_col="var", breach_col="breach"
+    )
     # breaches where ret < var and ret < 0 → only middle row
-    assert df2['breach'].tolist() == [False, True, False]
+    assert df2["breach"].tolist() == [False, True, False]
 
-    summary = summarize_var_breaches(df2, breach_col='breach')
-    assert summary['count'] == 1
-    assert summary['percentage'] == pytest.approx(1/3, rel=1e-3)
+    summary = summarize_var_breaches(df2, breach_col="breach")
+    assert summary["count"] == 1
+    assert summary["percentage"] == pytest.approx(1 / 3, rel=1e-3)
