@@ -3,6 +3,7 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 
 from config import PROCESSED_DATA_DIR, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS
 from risk.utils import calculate_daily_returns
@@ -62,9 +63,9 @@ def parametric_var(
         raise ValueError("Returns series is empty.")
     mean = returns.mean()
     std = returns.std()
-    # get z-score from the normal distribution
-    z = abs(np.percentile(np.random.normal(0, 1, 100000), (1 - confidence_level) * 100))
-    var = mean - z * std
+    # deterministic z-score for the one-tailed lower quantile
+    z = norm.ppf(1 - confidence_level)
+    var = -(mean + z * std)
     return abs(var)
 
 
