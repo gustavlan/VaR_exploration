@@ -10,6 +10,7 @@ from risk.utils import (
     calculate_forward_log_returns,
     calculate_rolling_volatility,
     calculate_parametric_var,
+    load_latest_price_data,
     sharpe_ratio,
     detect_var_breaches,
     summarize_var_breaches,
@@ -89,6 +90,44 @@ def test_detect_and_summarize_breaches():
     # breaches where ret < var and ret < 0 → only middle row
     assert df2["breach"].tolist() == [False, True, False]
 
-    summary = summarize_var_breaches(df2, breach_col="breach")
-    assert summary["count"] == 1
-    assert summary["percentage"] == pytest.approx(1 / 3, rel=1e-3)
+    summary = summarize_var_breaches(df2, breach_col='breach')
+    assert summary['count'] == 1
+    assert summary['percentage'] == pytest.approx(1/3, rel=1e-3)
+
+
+def _write_csv(path, df):
+    """Helper to write DataFrame to CSV without index."""
+    df.to_csv(path, index=False)
+
+
+def test_load_latest_price_data(tmp_path):
+    # two CSVs with different dates - latest should be loaded
+    df_old = pd.DataFrame({
+        'trade_date': pd.date_range('2022-01-01', periods=3),
+        'price': [1.0, 2.0, 3.0],
+    })
+    df_new = pd.DataFrame({
+        'trade_date': pd.date_range('2023-01-01', periods=3),
+        'price': [10.0, 20.0, 30.0],
+    })
+
+    _write_csv(tmp_path / '2022-01-01_keyword.csv', df_old)
+    _write_csv(tmp_path / '2023-01-01_keyword.csv', df_new)
+
+    loaded = load_latest_price_data(str(tmp_path), 'keyword')
+
+    # should load the newer file
+    assert loaded['price'].iloc[0] == 10.0
+    # index must be datetime and columns float64
+    assert isinstance(loaded.index[0], pd.Timestamp)
+    assert all(dtype == 'float64' for dtype in loaded.dtypes)
+
+
+def test_load_latest_price_data_no_match(tmp_path):
+    # create an unrelated CSV
+    df = pd.DataFrame({'Date': pd.date_range('2024-01-01', periods=2), 'x': [1, 2]})
+    _write_csv(tmp_path / '2024-01-01_other.csv', df)
+
+    with pytest.raises(FileNotFoundError):
+        load_latest_price_data(str(tmp_path), 'missing')
+
