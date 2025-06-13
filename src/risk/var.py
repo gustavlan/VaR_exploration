@@ -97,7 +97,8 @@ def monte_carlo_var(
     std = returns.std()
     sims = np.random.normal(mean, std, simulations)
     var = np.percentile(sims, (1 - confidence_level) * 100)
-    return abs(var)
+    # np.percentile returns a numpy scalar; cast to float for clarity
+    return float(abs(var))
 
 
 if __name__ == "__main__":
