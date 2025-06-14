@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.stats import norm
 
 from config import PROCESSED_DATA_DIR, CONFIDENCE_LEVEL, MONTE_CARLO_SIMULATIONS
-from risk.utils import calculate_daily_returns
+from risk.utils import calculate_daily_returns, load_latest_price_data
 
 
 def historical_var(
@@ -102,11 +102,11 @@ def monte_carlo_var(
 
 
 def main() -> None:
-    """Run a simple VaR demo on example data."""
-    example = os.path.join(PROCESSED_DATA_DIR, "2025-03-30_sp500.csv")
-    df = pd.read_csv(example, index_col=0)
+    """Run a simple VaR demo on the latest processed S&P 500 data."""
+    df = load_latest_price_data(PROCESSED_DATA_DIR, "sp500")
     prices = df.iloc[:, 0]
     rets = calculate_daily_returns(prices)
+    print("Loaded latest S&P 500 prices (rows={})".format(len(df)))
     print("Historical VaR:", historical_var(rets))
     print("Parametric VaR:", parametric_var(rets))
     print("Monte Carlo VaR:", monte_carlo_var(rets))
