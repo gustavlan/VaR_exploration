@@ -113,6 +113,16 @@ Rather than fitting VaR once on the full sample, we:
 └── pytest.ini
 ```
 
+## Running Tests
+
+Install dependencies before invoking `pytest` to avoid missing packages:
+
+```bash
+pip install -r requirements.txt
+pip install -e .
+pytest
+```
+
 
 ## 5. References
 
