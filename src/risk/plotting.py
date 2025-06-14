@@ -15,7 +15,7 @@ def plot_var_breaches(
     breach_col: str = 'breach',
     return_col: str = 'ret_10d',
     var_col: str = 'var_10d'
-) -> None:
+) -> plt.Figure:
     """
     Plot returns, VaR threshold, and breach points on a single axes.
     """
@@ -38,6 +38,8 @@ def plot_var_breaches(
     ax.set_ylabel('Returns')
     ax.legend()
 
+    return ax.figure
+
 
 def plot_multiple_var_breaches(
     data_list: List[pd.DataFrame],
@@ -46,7 +48,7 @@ def plot_multiple_var_breaches(
     return_col: str = 'ret_10d',
     var_col: str = 'var_10d',
     figsize: tuple = (20, 5)
-) -> None:
+) -> plt.Figure:
     """
     Stack multiple VaR breach plots vertically for comparison.
     """
@@ -61,3 +63,4 @@ def plot_multiple_var_breaches(
 
     plt.tight_layout()
     plt.show()
+    return fig
