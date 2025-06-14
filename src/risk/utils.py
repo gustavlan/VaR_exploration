@@ -259,7 +259,7 @@ def load_latest_price_data(
     # 3) auto-detect date column
     date_col: Optional[str] = None
     for col in df_raw.columns:
-        parsed = pd.to_datetime(df_raw[col], errors='coerce', infer_datetime_format=True)
+        parsed = pd.to_datetime(df_raw[col], errors='coerce')
         frac = parsed.notna().mean()
         if frac >= date_threshold:
             date_col = col
