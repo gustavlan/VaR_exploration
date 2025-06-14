@@ -101,12 +101,16 @@ def monte_carlo_var(
     return float(abs(var))
 
 
-if __name__ == "__main__":
-    # Simple example usage
-    example = os.path.join(PROCESSED_DATA_DIR, '2025-03-30_sp500.csv')
+def main() -> None:
+    """Run a simple VaR demo on example data."""
+    example = os.path.join(PROCESSED_DATA_DIR, "2025-03-30_sp500.csv")
     df = pd.read_csv(example, index_col=0)
     prices = df.iloc[:, 0]
     rets = calculate_daily_returns(prices)
     print("Historical VaR:", historical_var(rets))
     print("Parametric VaR:", parametric_var(rets))
     print("Monte Carlo VaR:", monte_carlo_var(rets))
+
+
+if __name__ == "__main__":
+    main()

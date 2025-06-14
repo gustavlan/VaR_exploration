@@ -12,6 +12,20 @@ This repository implements a production-grade pipeline for computing and backtes
 
 Parameters (confidence level, horizon, EWMA λ) live in **`config.py`** for rapid scenario analysis.
 
+## Installation
+
+Install the project in editable mode so tests and scripts resolve the `risk` package:
+
+```bash
+pip install -e .
+```
+
+After installation run the example CLI:
+
+```bash
+risk-example
+```
+
 ---
 
 ## 2. Theoretical Background
@@ -109,7 +123,7 @@ Rather than fitting VaR once on the full sample, we:
 │   ├── processed
 │   └── raw
 ├── requirements.txt
-├── setup.py
+├── pyproject.toml
 └── pytest.ini
 ```
 
