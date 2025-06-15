@@ -129,7 +129,7 @@ Rather than fitting VaR once on the full sample, we:
 
 ## Running Tests
 
-Install dependencies before invoking `pytest` to avoid missing packages:
+Install dependencies (including `pytest`) before invoking the test suite:
 
 ```bash
 pip install -r requirements.txt
