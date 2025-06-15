@@ -10,8 +10,7 @@ from risk.utils import calculate_daily_returns, load_latest_price_data
 
 
 def historical_var(
-    returns: pd.Series,
-    confidence_level: float = CONFIDENCE_LEVEL
+    returns: pd.Series, confidence_level: float = CONFIDENCE_LEVEL
 ) -> float:
     """
     Compute historical VaR at a specified confidence level.
@@ -41,8 +40,7 @@ def historical_var(
 
 
 def parametric_var(
-    returns: pd.Series,
-    confidence_level: float = CONFIDENCE_LEVEL
+    returns: pd.Series, confidence_level: float = CONFIDENCE_LEVEL
 ) -> float:
     """
     Compute parametric (Gaussian) VaR assuming normal returns.
@@ -72,7 +70,7 @@ def parametric_var(
 def monte_carlo_var(
     returns: pd.Series,
     confidence_level: float = CONFIDENCE_LEVEL,
-    simulations: int = MONTE_CARLO_SIMULATIONS
+    simulations: int = MONTE_CARLO_SIMULATIONS,
 ) -> float:
     """
     Compute VaR via Monte Carlo simulation under normality assumption.
