@@ -39,12 +39,12 @@ def test_calculate_daily_returns():
 def test_calculate_log_and_forward_returns():
     prices = pd.Series([100, 110, 121], index=pd.date_range("2020-01-01", periods=3))
     log_ret = calculate_log_returns(prices)
-    assert np.allclose(log_ret.values, np.log([110/100, 121/110]))
+    assert np.allclose(log_ret.values, np.log([110 / 100, 121 / 110]))
 
     fwd = calculate_forward_log_returns(prices, days_forward=2)
     # only one value: ln( price[t+2]/price[t] ) = ln(121/100)
     assert len(fwd) == 1
-    assert fwd.iloc[0] == pytest.approx(np.log(121/100))
+    assert fwd.iloc[0] == pytest.approx(np.log(121 / 100))
 
 
 def test_rolling_vol_and_parametric_var():
@@ -78,17 +78,21 @@ def test_sharpe_ratio_and_edge():
 
 def test_detect_and_summarize_breaches():
     # make a tiny DataFrame
-    df = pd.DataFrame({
-        'ret':    [0.05, -0.10, -0.02],
-        'var':    [-0.01, -0.05, -0.05],
-    })
-    df2 = detect_var_breaches(df.copy(), return_col='ret', var_col='var', breach_col='breach')
+    df = pd.DataFrame(
+        {
+            "ret": [0.05, -0.10, -0.02],
+            "var": [-0.01, -0.05, -0.05],
+        }
+    )
+    df2 = detect_var_breaches(
+        df.copy(), return_col="ret", var_col="var", breach_col="breach"
+    )
     # breaches where ret < var and ret < 0 → only middle row
-    assert df2['breach'].tolist() == [False, True, False]
+    assert df2["breach"].tolist() == [False, True, False]
 
-    summary = summarize_var_breaches(df2, breach_col='breach')
-    assert summary['count'] == 1
-    assert summary['percentage'] == pytest.approx(1/3, rel=1e-3)
+    summary = summarize_var_breaches(df2, breach_col="breach")
+    assert summary["count"] == 1
+    assert summary["percentage"] == pytest.approx(1 / 3, rel=1e-3)
 
 
 def _write_csv(path, df):
@@ -98,32 +102,35 @@ def _write_csv(path, df):
 
 def test_load_latest_price_data(tmp_path):
     # two CSVs with different dates - latest should be loaded
-    df_old = pd.DataFrame({
-        'trade_date': pd.date_range('2022-01-01', periods=3),
-        'price': [1.0, 2.0, 3.0],
-    })
-    df_new = pd.DataFrame({
-        'trade_date': pd.date_range('2023-01-01', periods=3),
-        'price': [10.0, 20.0, 30.0],
-    })
+    df_old = pd.DataFrame(
+        {
+            "trade_date": pd.date_range("2022-01-01", periods=3),
+            "price": [1.0, 2.0, 3.0],
+        }
+    )
+    df_new = pd.DataFrame(
+        {
+            "trade_date": pd.date_range("2023-01-01", periods=3),
+            "price": [10.0, 20.0, 30.0],
+        }
+    )
 
-    _write_csv(tmp_path / '2022-01-01_keyword.csv', df_old)
-    _write_csv(tmp_path / '2023-01-01_keyword.csv', df_new)
+    _write_csv(tmp_path / "2022-01-01_keyword.csv", df_old)
+    _write_csv(tmp_path / "2023-01-01_keyword.csv", df_new)
 
-    loaded = load_latest_price_data(str(tmp_path), 'keyword')
+    loaded = load_latest_price_data(str(tmp_path), "keyword")
 
     # should load the newer file
-    assert loaded['price'].iloc[0] == 10.0
+    assert loaded["price"].iloc[0] == 10.0
     # index must be datetime and columns float64
     assert isinstance(loaded.index[0], pd.Timestamp)
-    assert all(dtype == 'float64' for dtype in loaded.dtypes)
+    assert all(dtype == "float64" for dtype in loaded.dtypes)
 
 
 def test_load_latest_price_data_no_match(tmp_path):
     # create an unrelated CSV
-    df = pd.DataFrame({'Date': pd.date_range('2024-01-01', periods=2), 'x': [1, 2]})
-    _write_csv(tmp_path / '2024-01-01_other.csv', df)
+    df = pd.DataFrame({"Date": pd.date_range("2024-01-01", periods=2), "x": [1, 2]})
+    _write_csv(tmp_path / "2024-01-01_other.csv", df)
 
     with pytest.raises(FileNotFoundError):
-        load_latest_price_data(str(tmp_path), 'missing')
-
+        load_latest_price_data(str(tmp_path), "missing")

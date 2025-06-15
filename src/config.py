@@ -35,4 +35,4 @@ CONFIDENCE_Z = norm.ppf(1 - CONFIDENCE_LEVEL)
 
 # EWMA smoothing parameter
 EWMA_LAMBDA = 0.72  # decay factor λ
-EWMA_ALPHA  = 1 - EWMA_LAMBDA  # smoothing factor α
+EWMA_ALPHA = 1 - EWMA_LAMBDA  # smoothing factor α
