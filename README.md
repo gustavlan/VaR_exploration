@@ -115,7 +115,7 @@ Rather than fitting VaR once on the full sample, we:
 │       ├── var.py            # Historical/parametric/MC VaR
 │       └── backtests.py      # POF, Christoffersen, ES
 ├── notebooks/                # Jupyter analysis
-│   └── VaR_exploration.ipynb
+│   └── var_notebook.ipynb
 ├── tests/
 │   ├── test_utils.py
 │   └── test_var.py
