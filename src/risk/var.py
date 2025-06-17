@@ -12,26 +12,7 @@ from risk.utils import calculate_daily_returns, load_latest_price_data
 def historical_var(
     returns: pd.Series, confidence_level: float = CONFIDENCE_LEVEL
 ) -> float:
-    """
-    Compute historical VaR at a specified confidence level.
-
-    Parameters
-    ----------
-    returns
-        Series of daily returns.
-    confidence_level
-        VaR confidence level (e.g. 0.95 for 95%).
-
-    Returns
-    -------
-    float
-        Absolute historical VaR (positive number).
-
-    Raises
-    ------
-    ValueError
-        If the returns series is empty.
-    """
+    """Historical VaR at ``confidence_level``."""
     if returns.empty:
         raise ValueError("Returns series is empty.")
     var_pct = (1 - confidence_level) * 100
@@ -42,26 +23,12 @@ def historical_var(
 def parametric_var(
     returns: pd.Series, confidence_level: float = CONFIDENCE_LEVEL
 ) -> float:
-    """
-    Compute parametric (Gaussian) VaR assuming normal returns.
-
-    Parameters
-    ----------
-    returns
-        Series of daily returns.
-    confidence_level
-        VaR confidence level.
-
-    Returns
-    -------
-    float
-        Absolute parametric VaR.
-    """
+    """Parametric VaR under a normal assumption."""
     if returns.empty:
         raise ValueError("Returns series is empty.")
     mean = returns.mean()
     std = returns.std()
-    # deterministic z-score for the one-tailed lower quantile
+    # one-tailed z-score
     z = norm.ppf(1 - confidence_level)
     var = -(mean + z * std)
     return abs(var)
@@ -72,30 +39,14 @@ def monte_carlo_var(
     confidence_level: float = CONFIDENCE_LEVEL,
     simulations: int = MONTE_CARLO_SIMULATIONS,
 ) -> float:
-    """
-    Compute VaR via Monte Carlo simulation under normality assumption.
-
-    Parameters
-    ----------
-    returns
-        Series of daily returns.
-    confidence_level
-        VaR confidence level.
-    simulations
-        Number of simulated return paths.
-
-    Returns
-    -------
-    float
-        Absolute Monte Carlo VaR.
-    """
+    """Monte Carlo VaR assuming normal returns."""
     if returns.empty:
         raise ValueError("Returns series is empty.")
     mean = returns.mean()
     std = returns.std()
     sims = np.random.normal(mean, std, simulations)
     var = np.percentile(sims, (1 - confidence_level) * 100)
-    # np.percentile returns a numpy scalar; cast to float for clarity
+    # cast numpy scalar to float
     return float(abs(var))
 
 

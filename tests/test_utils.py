@@ -18,20 +18,20 @@ from risk.utils import (
 
 
 def test_annualize_return_and_vol():
-    # daily return .01 over 252 days → ~2.52 annual
+    # daily return .01 → ~2.52 annual
     assert annualize_return(0.01, trading_days=252) == pytest.approx(2.52)
-    # daily vol .02 → annual vol .02*sqrt(252)
+    # daily vol .02 → annual vol * sqrt(252)
     expected = 0.02 * np.sqrt(252)
     assert annualize_volatility(0.02, trading_days=252) == pytest.approx(expected)
 
 
 def test_calculate_daily_returns():
     prices = pd.Series([100, 110, 121], index=pd.date_range("2020-01-01", periods=3))
-    # returns = [10%, 10%]
+    # expect two 10% returns
     ret = calculate_daily_returns(prices)
     assert np.allclose(ret.values, [0.1, 0.1])
 
-    # empty series → ValueError
+    # empty series -> ValueError
     with pytest.raises(ValueError):
         calculate_daily_returns(pd.Series(dtype=float))
 
@@ -42,42 +42,42 @@ def test_calculate_log_and_forward_returns():
     assert np.allclose(log_ret.values, np.log([110 / 100, 121 / 110]))
 
     fwd = calculate_forward_log_returns(prices, days_forward=2)
-    # only one value: ln( price[t+2]/price[t] ) = ln(121/100)
+    # one value ln(121/100)
     assert len(fwd) == 1
     assert fwd.iloc[0] == pytest.approx(np.log(121 / 100))
 
 
 def test_rolling_vol_and_parametric_var():
-    # simple returns series
+    # simple returns
     rets = pd.Series([1.0, 2.0, 3.0, 4.0])
-    # window=2 volatility: sample std([1,2]) = sqrt(0.5)
+    # window=2 std sqrt(0.5)
     vol = calculate_rolling_volatility(rets, window=2)
     expected_std = np.sqrt(0.5)
-    # first value is NaN, second is ≈0.7071
+    # first NaN then ≈0.7071
     assert vol.iloc[1] == pytest.approx(expected_std)
 
-    # parametric var: with volatility series [1,2,3], z=-1, horizon=1 → [-1,-2,-3]
+    # parametric var with z=-1 -> [-1,-2,-3]
     vol_series = pd.Series([1.0, 2.0, 3.0])
     var = calculate_parametric_var(vol_series, confidence_z=-1.0, horizon_days=1)
     assert np.allclose(var.values, [-1.0, -2.0, -3.0])
 
 
 def test_sharpe_ratio_and_edge():
-    # constant zero returns → Sharpe undefined
+    # zero returns -> error
     zero = pd.Series([0.0, 0.0, 0.0])
     with pytest.raises(ValueError):
         sharpe_ratio(zero, risk_free_rate=0.0, trading_days=252)
 
-    # simple positive returns with zero RF
+    # positive returns, zero RF
     rets = pd.Series([0.01, 0.02, 0.015])
     sr = sharpe_ratio(rets, risk_free_rate=0.0, trading_days=252)
-    # check it's a finite number
+    # result finite
     assert isinstance(sr, float)
     assert not np.isnan(sr)
 
 
 def test_detect_and_summarize_breaches():
-    # make a tiny DataFrame
+    # small DataFrame
     df = pd.DataFrame(
         {
             "ret": [0.05, -0.10, -0.02],
@@ -87,7 +87,7 @@ def test_detect_and_summarize_breaches():
     df2 = detect_var_breaches(
         df.copy(), return_col="ret", var_col="var", breach_col="breach"
     )
-    # breaches where ret < var and ret < 0 → only middle row
+    # only middle row breaches
     assert df2["breach"].tolist() == [False, True, False]
 
     summary = summarize_var_breaches(df2, breach_col="breach")
@@ -120,15 +120,15 @@ def test_load_latest_price_data(tmp_path):
 
     loaded = load_latest_price_data(str(tmp_path), "keyword")
 
-    # should load the newer file
+    # loads newer file
     assert loaded["price"].iloc[0] == 10.0
-    # index must be datetime and columns float64
+    # check index and dtypes
     assert isinstance(loaded.index[0], pd.Timestamp)
     assert all(dtype == "float64" for dtype in loaded.dtypes)
 
 
 def test_load_latest_price_data_no_match(tmp_path):
-    # create an unrelated CSV
+    # unrelated CSV
     df = pd.DataFrame({"Date": pd.date_range("2024-01-01", periods=2), "x": [1, 2]})
     _write_csv(tmp_path / "2024-01-01_other.csv", df)
 

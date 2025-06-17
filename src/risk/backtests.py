@@ -4,36 +4,21 @@ from scipy.stats import chi2
 
 
 def kupiec_pof_test(breaches: pd.Series, alpha: float) -> dict:
-    """
-    Kupiec Proportion of Failures (POF) test for VaR backtesting.
+    """Kupiec's POF test comparing the breach rate to ``1 - alpha``.
 
-    Parameters
-    ----------
-    breaches
-        Boolean Series where True indicates a VaR breach.
-    alpha
-        VaR confidence level (e.g. 0.95 for 95% VaR).
-
-    Returns
-    -------
-    dict with keys
-      - 'n': total observations
-      - 'x': number of breaches
-      - 'p_hat': observed failure rate (x/n)
-      - 'LR': likelihood ratio statistic
-      - 'p_value': p-value under Chi2(1)
+    Returns ``{'n', 'x', 'p_hat', 'LR', 'p_value'}``.
     """
     n = len(breaches)
     x = int(breaches.sum())
     p = 1 - alpha
     p_hat = x / n
 
-    # avoid zeros in log
+    # avoid log(0)
     if p_hat in (0, 1):
         LR = np.nan
         p_value = np.nan
     else:
-        # Log‐likelihood ratio
+        # log-likelihood ratio
         num = (1 - p) ** (n - x) * p**x
         den = (1 - p_hat) ** (n - x) * p_hat**x
         LR = -2 * np.log(num / den)
@@ -43,23 +28,9 @@ def kupiec_pof_test(breaches: pd.Series, alpha: float) -> dict:
 
 
 def christoffersen_independence_test(breaches: pd.Series) -> dict:
-    """
-    Christoffersen test for independence of VaR breaches.
+    """Christoffersen independence test for a breach sequence.
 
-    Builds a 2×2 transition matrix:
-        -- from no‐breach (0) -- from breach (1)
-    to no‐breach (0): N00, N10
-       breach   (1): N01, N11
-
-    Under H0 (independence), the probability of breach does not
-    depend on the previous day’s state.
-
-    Returns
-    -------
-    dict with keys
-      - transition_counts: dict of N00, N01, N10, N11
-      - LR: likelihood‐ratio statistic
-      - p_value: p‐value under Chi2(1)
+    Returns the transition counts and test statistics.
     """
     # build transitions
     b = breaches.astype(int).values
@@ -96,24 +67,8 @@ def christoffersen_independence_test(breaches: pd.Series) -> dict:
 
 
 def expected_shortfall(returns: pd.Series, alpha: float) -> float:
-    """
-    Compute Expected Shortfall (Conditional VaR) at level alpha.
-
-    ES_α = E[–r | r ≤ –VaR_α]
-
-    Parameters
-    ----------
-    returns
-        Series of portfolio returns.
-    alpha
-        VaR confidence level (e.g. 0.95).
-
-    Returns
-    -------
-    float
-        ES (positive number).
-    """
-    # losses are -returns; ES is average loss beyond VaR
+    """Expected shortfall at level ``alpha`` for the given returns."""
+    # average loss beyond VaR
     var_level = np.percentile(returns.dropna(), (1 - alpha) * 100)
     tail = returns[returns <= var_level]
     if len(tail) == 0:

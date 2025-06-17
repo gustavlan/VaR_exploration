@@ -21,18 +21,18 @@ def plot_var_breaches(
     """
     Plot returns, VaR threshold, and breach points on a single axes.
     """
-    # Force index into real Python datetimes
+    # Convert index to datetime
     x = pd.to_datetime(data.index)
 
-    # Plot the 10-day returns
+    # plot returns
     ax.plot(x, data[return_col], label="10-day returns")
 
-    # Mark breaches
+    # mark breaches
     breaches = data[data[breach_col]]
     bx = pd.to_datetime(breaches.index)
     ax.scatter(bx, breaches[return_col], marker="x", label="VaR Breaches")
 
-    # Plot the 10-day VaR
+    # plot VaR
     ax.plot(x, data[var_col], label="10-day VaR")
 
     ax.set_title(title)
