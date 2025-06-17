@@ -14,7 +14,7 @@ from risk.backtests import kupiec_pof_test
 
 
 def test_full_pipeline(tmp_path, capsys, monkeypatch):
-    # mock yfinance.download to return deterministic data
+    # mock yfinance.download
     df = pd.DataFrame(
         {"Close": [100, 101, 102, 103, 104]},
         index=pd.date_range("2024-01-01", periods=5),
@@ -27,7 +27,7 @@ def test_full_pipeline(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(config, "PROCESSED_DATA_DIR", str(tmp_path))
     monkeypatch.setattr(var, "PROCESSED_DATA_DIR", str(tmp_path))
 
-    # fetch data and write CSV
+    # fetch sample data
     rdata.fetch_and_save_data(
         tickers={"^GSPC": "sp500"},
         start_date="2024-01-01",
@@ -35,14 +35,14 @@ def test_full_pipeline(tmp_path, capsys, monkeypatch):
         output_dir=str(tmp_path),
     )
 
-    reload(var)  # ensure main uses patched constant
+    reload(var)  # pick up patched constant
     var.main()
     out = capsys.readouterr().out
     assert "Historical VaR:" in out
     assert "Parametric VaR:" in out
     assert "Monte Carlo VaR:" in out
 
-    # integration: load saved CSV and run backtest pieces
+    # load CSV and run backtests
     df_loaded = load_latest_price_data(str(tmp_path), "sp500")
     prices = df_loaded.iloc[:, 0]
     rets = calculate_daily_returns(prices)
